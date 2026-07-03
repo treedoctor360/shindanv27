@@ -1,0 +1,50 @@
+# GitHub Pages への自動デプロイ
+# 事前準備（1回だけ）: リポジトリの Settings → Pages → Source を
+# 「GitHub Actions」に変更しておくこと。
+#
+# main への push で自動実行。Actions タブから手動実行（workflow_dispatch）も可能。
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時に複数のデプロイが走らないようにする
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: 依存をインストール
+        run: npm ci
+      - name: 判定ロジックのテスト
+        run: npm test
+      - name: 本番ビルド
+        run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

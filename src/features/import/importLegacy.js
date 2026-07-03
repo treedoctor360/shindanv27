@@ -9,11 +9,12 @@
 
 import { db } from '../../db/db.js';
 import { evaluateRecord } from '../../logic/diagnosis.js';
-import { DECLINE_ITEM_IDS } from '../../data/declineItems.js';
 
 // v26 と v27 で項目キーが異なる場合の対応表。
-// 旧データの実サンプルを確認し、必要ならここに旧キー→新キーを追記する。
-// 例: { juke: 'd01', edaShincho: 'd02', ... }
+// 【2026-07-03 実データ（backup_20260703.json）照合済み】
+// v26 の scores/health は英語名キー（fungusBody, sprout 等）を使っており、
+// v27 は同じキーをそのまま正式IDとして採用したため変換は不要（空のまま）。
+// 将来キーを変える場合のみ 旧キー→新キー をここに追記する。
 export const SCORE_KEY_MAP = {};
 export const HEALTH_KEY_MAP = {};
 
@@ -58,8 +59,10 @@ export function convertLegacyRecord(legacy) {
     rec.id = `legacy-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   }
 
-  // 判定値は旧DOM由来の文字列を信用せず、純粋関数で再計算して上書きする
-  const { avg, worst, overall } = evaluateRecord(rec, DECLINE_ITEM_IDS);
+  // 判定値は旧DOM由来の文字列を信用せず、純粋関数で再計算して上書きする。
+  // 平均の対象は「その record に実在する評点キー」。マスタ未登録のキーが
+  // 旧データに含まれていても、v26 と同じ平均値になる（v26 も入力項目のみで平均）。
+  const { avg, worst, overall } = evaluateRecord(rec, Object.keys(rec.scores));
   rec.avg = avg;
   rec.worstHealth = worst;
   rec.overall = overall ? overall.grade : null;

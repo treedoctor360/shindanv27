@@ -12,6 +12,16 @@ import { HEALTH_ITEMS } from '../../data/healthItems.js';
  */
 export async function exportRecordsToExcel(records, filename) {
   const XLSX = await import('xlsx');
+
+  // マスタ未登録の評点キー（旧データ由来）も列として落とさず出力する
+  const knownScoreIds = new Set(DECLINE_ITEMS.map((i) => i.id));
+  const knownHealthIds = new Set(HEALTH_ITEMS.map((i) => i.id));
+  const extraScoreKeys = new Set();
+  const extraHealthKeys = new Set();
+  for (const r of records) {
+    for (const k of Object.keys(r.scores ?? {})) if (!knownScoreIds.has(k)) extraScoreKeys.add(k);
+    for (const k of Object.keys(r.health ?? {})) if (!knownHealthIds.has(k)) extraHealthKeys.add(k);
+  }
   const rows = records.map((r) => {
     const row = {
       '樹木番号': r.treeNo ?? '',
@@ -31,8 +41,14 @@ export async function exportRecordsToExcel(records, filename) {
     for (const item of DECLINE_ITEMS) {
       row[`活力:${item.label}`] = r.scores?.[item.id] ?? '';
     }
+    for (const key of extraScoreKeys) {
+      row[`活力:${key}`] = r.scores?.[key] ?? '';
+    }
     for (const item of HEALTH_ITEMS) {
       row[`健全:${item.label}`] = r.health?.[item.id] ?? '';
+    }
+    for (const key of extraHealthKeys) {
+      row[`健全:${key}`] = r.health?.[key] ?? '';
     }
     row['活力度平均'] = r.avg ?? '';
     row['健全度最悪'] = r.worstHealth ?? '';

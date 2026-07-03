@@ -228,10 +228,17 @@ npm run dev
 
 ## 9. 実装メモ（v27 初期実装時の注意点）
 
-- **活力度17項目・健全度14項目の id**（`d01`〜`d17` / `h01`〜`h14`）は
-  v26.8 の `record.scores` / `record.health` のキーと突き合わせが必要。
-  ずれていた場合は `src/features/import/importLegacy.js` の
-  `SCORE_KEY_MAP` / `HEALTH_KEY_MAP` に旧キー→新キーの対応を追記する。
+- **項目キーは v26.8 の実データ（backup_20260703.json）と照合済み。**
+  v26 は英語名キー（`fungusBody`, `sprout` 等）を使っており、v27 も同じキーを
+  正式IDとして採用した（`SCORE_KEY_MAP` / `HEALTH_KEY_MAP` は空でよい）。
+  - 健全度14項目: **全キー確認済み**（`src/data/healthItems.js`）。
+    日本語ラベルのみキー名からの推定なので v26 画面表記と要照合。
+  - 活力度: 実データに現れた **5キーのみ確認済み**（`bud` / `sprout` /
+    `autumnColor` / `barkTurnover` / `barkWound`）。残り12項目は
+    v26.1shindan のソースで確認するまで仮ID（`d01`〜`d12`, `confirmed: false`）。
+    確認後 `src/data/declineItems.js` を差し替えること。
+  - 取り込み時の平均再計算は「record に実在する評点キー」で行うため、
+    マスタ未確認のキーが来ても平均値は v26 と一致する。
 - **knowledge.js のマスタは全件 `verified: false`（出典確認中）で登録済み。**
   公的資料の原典ページと照合してから `verified: true` に変更すること。
 - 判定テストは `npm test`（node --test）で実行できる。

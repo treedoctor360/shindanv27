@@ -16,7 +16,8 @@ import { generateFindings, needsPrecisionDiagnosis } from '../../logic/findings.
 import PhotoInput from './PhotoInput.jsx';
 import InferencePanel from '../InferencePanel/InferencePanel.jsx';
 
-const WEATHER_OPTIONS = ['晴', '曇', '雨', '雪'];
+// v26 実データの表記（「晴れ」）に合わせる
+const WEATHER_OPTIONS = ['晴れ', '曇り', '雨', '雪'];
 const MEASURE_OPTIONS = [
   '経過観察',
   '枯枝・危険枝の剪定',
@@ -33,7 +34,7 @@ function emptyRecord(defaults = {}) {
     projectId: '',
     treeNo: '',
     surveyDate: new Date().toISOString().slice(0, 10),
-    weather: '晴',
+    weather: '晴れ',
     inspector: defaults.inspector ?? '',
     species: '',
     family: '',
@@ -227,6 +228,10 @@ export default function InspectForm({ onSaved }) {
           <label className="field">
             <span>天候</span>
             <select value={record.weather} onChange={(e) => set('weather', e.target.value)}>
+              {/* 旧データに選択肢外の表記があっても表示が消えないよう補う */}
+              {record.weather && !WEATHER_OPTIONS.includes(record.weather) && (
+                <option value={record.weather}>{record.weather}</option>
+              )}
               {WEATHER_OPTIONS.map((w) => (
                 <option key={w} value={w}>
                   {w}
