@@ -1,0 +1,419 @@
+/* 樹木診断・点検システム v27 — 基本スタイル */
+/* 現場でのスマホ利用を想定し、タップしやすい大きめのUIにする */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic', sans-serif;
+  background: #f4f6f4;
+  color: #263238;
+  line-height: 1.6;
+}
+
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 12px 40px;
+}
+
+.loading {
+  padding: 40px;
+  text-align: center;
+}
+
+/* ---- ヘッダー・タブ ---- */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #2e7d32;
+  color: #fff;
+  margin: 0 -12px;
+  padding: 10px 16px 0;
+}
+
+.app-header h1 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 4px;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #f4f6f4;
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+/* ---- バナー ---- */
+.banner {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.banner-warning {
+  background: #fff3e0;
+  border: 1px solid #ef6c00;
+}
+
+.banner-info {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+}
+
+.banner-backup {
+  background: #e3f2fd;
+  border: 1px solid #64b5f6;
+}
+
+.banner button {
+  margin-left: 8px;
+}
+
+.banner .source {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: #607d8b;
+}
+
+/* ---- 判定サマリー ---- */
+.judge-summary {
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 10px;
+  border: 2px solid #b0bec5;
+  background: #fff;
+}
+
+.judge-main {
+  font-size: 1.15rem;
+}
+
+.judge-sub {
+  font-size: 0.85rem;
+  color: #546e7a;
+}
+
+.judge-summary.grade-A { border-color: #2e7d32; }
+.judge-summary.grade-B { border-color: #9acd32; }
+.judge-summary.grade-C { border-color: #ef6c00; background: #fff8f0; }
+.judge-summary.grade-D { border-color: #c62828; background: #fff5f5; }
+
+/* ---- フォーム ---- */
+fieldset {
+  margin: 14px 0;
+  padding: 12px;
+  border: 1px solid #cfd8dc;
+  border-radius: 10px;
+  background: #fff;
+}
+
+legend {
+  font-weight: 700;
+  padding: 0 6px;
+}
+
+.field {
+  display: block;
+  margin: 8px 0;
+}
+
+.field > span {
+  display: block;
+  font-size: 0.85rem;
+  color: #455a64;
+  margin-bottom: 2px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #b0bec5;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #fff;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  width: auto;
+  margin-right: 6px;
+}
+
+input[type='file'] {
+  border: none;
+  padding-left: 0;
+}
+
+button {
+  padding: 9px 14px;
+  border: 1px solid #90a4ae;
+  border-radius: 8px;
+  background: #eceff1;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+button.primary {
+  background: #2e7d32;
+  border-color: #2e7d32;
+  color: #fff;
+  font-weight: 700;
+}
+
+button.danger {
+  color: #c62828;
+  border-color: #c62828;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 14px;
+}
+
+@media (max-width: 600px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gps-row {
+  display: flex;
+  gap: 6px;
+}
+
+.gps-row button {
+  white-space: nowrap;
+}
+
+.item-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 14px;
+}
+
+@media (max-width: 600px) {
+  .item-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.group-tag {
+  display: inline-block;
+  font-style: normal;
+  font-size: 0.7rem;
+  background: #eceff1;
+  border-radius: 4px;
+  padding: 0 5px;
+  margin-right: 4px;
+  color: #546e7a;
+}
+
+.precision-tag {
+  font-style: normal;
+  color: #ef6c00;
+  margin-left: 4px;
+}
+
+.check-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 6px 0;
+}
+
+.check {
+  white-space: nowrap;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.form-actions .primary {
+  flex: 1;
+  padding: 14px;
+  font-size: 1.05rem;
+}
+
+.hint {
+  font-size: 0.82rem;
+  color: #607d8b;
+}
+
+/* ---- 写真 ---- */
+.photo-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.photo-thumb {
+  position: relative;
+}
+
+.photo-thumb img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #b0bec5;
+}
+
+.photo-thumb button {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 50%;
+  background: #c62828;
+  color: #fff;
+  border: none;
+  line-height: 1;
+}
+
+/* ---- 一覧 ---- */
+.list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.list-toolbar input {
+  flex: 1;
+  min-width: 160px;
+}
+
+.list-toolbar select {
+  width: auto;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #cfd8dc;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+th,
+td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #eceff1;
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  background: #f5f7f5;
+  position: sticky;
+  top: 0;
+}
+
+td.empty {
+  text-align: center;
+  color: #90a4ae;
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.row-actions button {
+  padding: 4px 10px;
+  font-size: 0.82rem;
+}
+
+.grade-badge {
+  display: inline-block;
+  min-width: 26px;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.grade-badge.grade-A { background: #2e7d32; }
+.grade-badge.grade-B { background: #9acd32; }
+.grade-badge.grade-C { background: #ef6c00; }
+.grade-badge.grade-D { background: #c62828; }
+.grade-badge.grade-none { background: #90a4ae; }
+
+/* ---- 経年比較 ---- */
+.trend-table .current {
+  font-weight: 700;
+  background: #f1f8e9;
+}
+
+/* ---- 地図 ---- */
+.map-container {
+  height: 70vh;
+  border-radius: 10px;
+  border: 1px solid #cfd8dc;
+}
+
+.map-legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+  font-size: 0.85rem;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+/* ---- フッター ---- */
+.app-footer {
+  margin-top: 32px;
+  padding-top: 12px;
+  border-top: 1px solid #cfd8dc;
+  text-align: center;
+  font-size: 0.78rem;
+  color: #78909c;
+}

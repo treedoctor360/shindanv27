@@ -1,0 +1,27 @@
+{
+  "name": "tree-shindan-v27",
+  "private": true,
+  "version": "27.0.0",
+  "description": "樹木診断・点検システム v27（Vite + React 移行版）",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test src/logic/*.test.js"
+  },
+  "dependencies": {
+    "dexie": "^4.0.11",
+    "leaflet": "^1.9.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
+    "xlsx": "^0.18.5",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.2.0",
+    "vite-plugin-pwa": "^0.21.1"
+  }
+}
