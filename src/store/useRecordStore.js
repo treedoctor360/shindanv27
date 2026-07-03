@@ -8,6 +8,8 @@ import { db, saveRecordWithPhotos, deleteRecordWithPhotos, getSetting, setSettin
 export const useRecordStore = create((set, get) => ({
   // ---- 状態 ----
   records: [],           // 診断record一覧（写真は含まない）
+  projects: [],          // 案件（調査プロジェクト）一覧
+  activeProjectId: '',   // 現在選択中の案件ID（新規record に付与）
   loaded: false,         // Dexie からの初回読込が済んだか
   editingId: null,       // 編集中の record.id（null = 新規）
   settings: {
@@ -19,12 +21,37 @@ export const useRecordStore = create((set, get) => ({
   // ---- 初期化: Dexie から読み込む ----
   load: async () => {
     const records = await db.records.toArray();
+    const projects = await db.projects.toArray();
     const settings = {
       gasUrl: await getSetting('gasUrl', ''),
       inspector: await getSetting('inspector', ''),
       lastBackupAt: await getSetting('lastBackupAt', null)
     };
-    set({ records, settings, loaded: true });
+    const activeProjectId = await getSetting('activeProjectId', '');
+    set({ records, projects, activeProjectId, settings, loaded: true });
+  },
+
+  // ---- 案件（プロジェクト） ----
+  addProject: async (name) => {
+    const trimmed = (name ?? '').trim();
+    if (!trimmed) return null;
+    const project = { id: `proj-${Date.now()}`, name: trimmed, createdAt: new Date().toISOString() };
+    await db.projects.put(project);
+    await setSetting('activeProjectId', project.id);
+    set({ projects: [...get().projects, project], activeProjectId: project.id });
+    return project;
+  },
+
+  deleteProject: async (id) => {
+    await db.projects.delete(id);
+    const next = get().activeProjectId === id ? '' : get().activeProjectId;
+    if (next !== get().activeProjectId) await setSetting('activeProjectId', next);
+    set({ projects: get().projects.filter((p) => p.id !== id), activeProjectId: next });
+  },
+
+  setActiveProject: async (id) => {
+    await setSetting('activeProjectId', id);
+    set({ activeProjectId: id });
   },
 
   // ---- record CRUD ----
@@ -44,7 +71,8 @@ export const useRecordStore = create((set, get) => ({
   // 取り込み・全消去などDexieを直接更新した後に一覧を再読込する
   reload: async () => {
     const records = await db.records.toArray();
-    set({ records });
+    const projects = await db.projects.toArray();
+    set({ records, projects });
   },
 
   // ---- 設定 ----

@@ -8,10 +8,38 @@ import { exportAll } from '../../db/db.js';
 import { importBackup } from '../../features/import/importLegacy.js';
 
 export default function SettingsPanel() {
-  const { settings, updateSetting, markBackedUp, reload, records } = useRecordStore();
+  const {
+    settings,
+    updateSetting,
+    markBackedUp,
+    reload,
+    records,
+    projects,
+    activeProjectId,
+    addProject,
+    deleteProject,
+    setActiveProject
+  } = useRecordStore();
   const fileRef = useRef(null);
   const [mode, setMode] = useState('merge');
   const [busy, setBusy] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+
+  // 案件（プロジェクト）の新規登録
+  const handleAddProject = async () => {
+    const created = await addProject(newProjectName);
+    if (created) setNewProjectName('');
+    else alert('案件名を入力してください');
+  };
+
+  const handleDeleteProject = async (p) => {
+    const count = records.filter((r) => r.projectId === p.id).length;
+    const msg =
+      count > 0
+        ? `案件「${p.name}」を削除しますか？\nこの案件の記録 ${count} 件は残りますが、案件の紐づけは外れます。`
+        : `案件「${p.name}」を削除しますか？`;
+    if (window.confirm(msg)) await deleteProject(p.id);
+  };
 
   // JSONバックアップ書き出し
   const handleExport = async () => {
@@ -61,6 +89,50 @@ export default function SettingsPanel() {
 
   return (
     <div className="settings-panel">
+      <fieldset>
+        <legend>案件（調査プロジェクト）</legend>
+        <p className="hint">
+          案件名を登録すると、点検入力タブの上部でボタン選択でき、記録に紐づきます。
+        </p>
+        <div className="gps-row">
+          <input
+            value={newProjectName}
+            placeholder="例: 令和8年度 街路樹点検"
+            onChange={(e) => setNewProjectName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleAddProject();
+            }}
+          />
+          <button type="button" onClick={handleAddProject}>
+            ＋ 登録
+          </button>
+        </div>
+        {projects.length > 0 && (
+          <ul className="project-list">
+            {projects.map((p) => {
+              const count = records.filter((r) => r.projectId === p.id).length;
+              const active = p.id === activeProjectId;
+              return (
+                <li key={p.id} className={active ? 'active' : ''}>
+                  <button
+                    type="button"
+                    className={active ? 'btn-choice selected' : 'btn-choice'}
+                    onClick={() => setActiveProject(active ? '' : p.id)}
+                  >
+                    {active ? '✅ ' : ''}
+                    {p.name}
+                  </button>
+                  <span className="hint">記録 {count} 件</span>
+                  <button type="button" className="danger" onClick={() => handleDeleteProject(p)}>
+                    削除
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </fieldset>
+
       <fieldset>
         <legend>GAS同期（スプレッドシート）</legend>
         <label className="field">

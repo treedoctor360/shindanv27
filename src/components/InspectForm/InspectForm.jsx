@@ -9,15 +9,21 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRecordStore } from '../../store/useRecordStore.js';
 import { db } from '../../db/db.js';
 import { DECLINE_ITEMS, DECLINE_ITEM_IDS, SCORE_LABELS } from '../../data/declineItems.js';
-import { HEALTH_ITEMS, HEALTH_GRADES } from '../../data/healthItems.js';
+import { HEALTH_ITEMS } from '../../data/healthItems.js';
 import { FUNGUS_OPTIONS, findSpeciesKnowledge, findFungusKnowledge } from '../../data/knowledge.js';
 import { evaluateRecord } from '../../logic/diagnosis.js';
 import { generateFindings, needsPrecisionDiagnosis } from '../../logic/findings.js';
 import PhotoInput from './PhotoInput.jsx';
+import ButtonGroup from './ButtonGroup.jsx';
+import LocationPicker from './LocationPicker.jsx';
 import InferencePanel from '../InferencePanel/InferencePanel.jsx';
 
 // v26 実データの表記（「晴れ」）に合わせる
 const WEATHER_OPTIONS = ['晴れ', '曇り', '雨', '雪'];
+// 活力度 評点ボタンの色トーン（0=良 → 4=悪）
+const SCORE_TONES = ['g0', 'g1', 'g2', 'g3', 'g4'];
+// 健全度 グレードの色トーン
+const GRADE_TONES = { A: 'g0', B: 'g2', C: 'g3', D: 'g4' };
 const MEASURE_OPTIONS = [
   '経過観察',
   '枯枝・危険枝の剪定',
@@ -28,10 +34,10 @@ const MEASURE_OPTIONS = [
   '伐採の検討'
 ];
 
-function emptyRecord(defaults = {}) {
+function emptyRecord(defaults = {}, projectId = '') {
   return {
     id: crypto.randomUUID(),
-    projectId: '',
+    projectId,
     treeNo: '',
     surveyDate: new Date().toISOString().slice(0, 10),
     weather: '晴れ',
@@ -58,8 +64,9 @@ function emptyRecord(defaults = {}) {
 }
 
 export default function InspectForm({ onSaved }) {
-  const { records, editingId, setEditingId, saveRecord, settings } = useRecordStore();
-  const [record, setRecord] = useState(() => emptyRecord(settings));
+  const { records, editingId, setEditingId, saveRecord, settings, projects, activeProjectId } =
+    useRecordStore();
+  const [record, setRecord] = useState(() => emptyRecord(settings, activeProjectId));
   const [images, setImages] = useState([]);
   const [saving, setSaving] = useState(false);
 
@@ -84,10 +91,10 @@ export default function InspectForm({ onSaved }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingId]);
 
-  // 新規入力に切り替える（フォームを即時リセット）
+  // 新規入力に切り替える（フォームを即時リセット・現在の案件を引き継ぐ）
   const resetToNew = () => {
     setEditingId(null);
-    setRecord(emptyRecord(settings));
+    setRecord(emptyRecord(settings, activeProjectId));
     setImages([]);
   };
 
@@ -128,6 +135,10 @@ export default function InspectForm({ onSaved }) {
         [key]: list.includes(value) ? list.filter((v) => v !== value) : [...list, value]
       };
     });
+
+  // 地図のピン操作から緯度経度を更新
+  const setLatLng = (lat, lng) =>
+    setRecord((prev) => ({ ...prev, latitude: lat.toFixed(6), longitude: lng.toFixed(6) }));
 
   // GPS取得（現在地を緯度経度欄へ）
   const takeGPS = () => {
@@ -178,8 +189,26 @@ export default function InspectForm({ onSaved }) {
     }
   };
 
+  const activeProject = projects.find((p) => p.id === record.projectId);
+
   return (
     <div className="inspect-form">
+      {/* ---- 案件（プロジェクト） ---- */}
+      <div className="project-bar">
+        <span className="project-bar-label">案件</span>
+        <ButtonGroup
+          options={[
+            { value: '', label: '未設定' },
+            ...projects.map((p) => ({ value: p.id, label: p.name }))
+          ]}
+          value={record.projectId ?? ''}
+          onChange={(v) => set('projectId', v || '')}
+        />
+        <span className="hint">
+          {activeProject ? `この記録は「${activeProject.name}」に登録されます` : '案件の登録は「設定」タブから'}
+        </span>
+      </div>
+
       {/* ---- 判定サマリー（常時表示） ---- */}
       <div className={`judge-summary grade-${overall?.grade ?? 'none'}`}>
         <div className="judge-main">
@@ -225,20 +254,14 @@ export default function InspectForm({ onSaved }) {
               onChange={(e) => set('surveyDate', e.target.value)}
             />
           </label>
-          <label className="field">
+          <div className="field">
             <span>天候</span>
-            <select value={record.weather} onChange={(e) => set('weather', e.target.value)}>
-              {/* 旧データに選択肢外の表記があっても表示が消えないよう補う */}
-              {record.weather && !WEATHER_OPTIONS.includes(record.weather) && (
-                <option value={record.weather}>{record.weather}</option>
-              )}
-              {WEATHER_OPTIONS.map((w) => (
-                <option key={w} value={w}>
-                  {w}
-                </option>
-              ))}
-            </select>
-          </label>
+            <ButtonGroup
+              options={WEATHER_OPTIONS.map((w) => ({ value: w, label: w }))}
+              value={record.weather}
+              onChange={(v) => set('weather', v)}
+            />
+          </div>
           <label className="field">
             <span>調査者</span>
             <input value={record.inspector} onChange={(e) => set('inspector', e.target.value)} />
@@ -284,7 +307,7 @@ export default function InspectForm({ onSaved }) {
               onChange={(e) => set('trunkGirth', e.target.value)}
             />
           </label>
-          <div className="field">
+          <div className="field field-wide">
             <span>位置（緯度・経度）</span>
             <div className="gps-row">
               <input
@@ -301,6 +324,11 @@ export default function InspectForm({ onSaved }) {
                 📍 GPS
               </button>
             </div>
+            <LocationPicker
+              lat={Number(record.latitude)}
+              lng={Number(record.longitude)}
+              onChange={setLatLng}
+            />
           </div>
         </div>
 
@@ -317,53 +345,53 @@ export default function InspectForm({ onSaved }) {
         )}
       </fieldset>
 
-      {/* ---- 活力度 17項目 ---- */}
+      {/* ---- 活力度 17項目（ボタン入力） ---- */}
       <fieldset>
         <legend>活力度（衰退度）評価 — 0〜4</legend>
-        <div className="item-grid">
+        <div className="item-list">
           {DECLINE_ITEMS.map((item) => (
-            <label key={item.id} className="field item-row">
-              <span>
+            <div key={item.id} className="item-row-btn">
+              <div className="item-head">
                 <em className="group-tag">{item.group}</em> {item.label}
-              </span>
-              <select
+              </div>
+              <ButtonGroup
+                columns={5}
+                options={(item.desc ?? SCORE_LABELS.map((s) => s.label)).map((d, i) => ({
+                  value: i,
+                  label: String(i),
+                  hint: d,
+                  tone: SCORE_TONES[i]
+                }))}
                 value={record.scores[item.id] ?? ''}
-                onChange={(e) => setScore(item.id, e.target.value)}
-              >
-                <option value="">未評価</option>
-                {SCORE_LABELS.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+                onChange={(v) => setScore(item.id, v)}
+              />
+            </div>
           ))}
         </div>
       </fieldset>
 
-      {/* ---- 健全度 14項目 ---- */}
+      {/* ---- 健全度 14項目（ボタン入力） ---- */}
       <fieldset>
         <legend>健全度（外観診断）評価 — A〜D</legend>
-        <div className="item-grid">
+        <div className="item-list">
           {HEALTH_ITEMS.map((item) => (
-            <label key={item.id} className="field item-row">
-              <span>
+            <div key={item.id} className="item-row-btn">
+              <div className="item-head">
                 <em className="group-tag">{item.group}</em> {item.label}
                 {item.precision && <em className="precision-tag" title="精密診断誘導の対象">⚑</em>}
-              </span>
-              <select
+              </div>
+              <ButtonGroup
+                columns={item.grades.length}
+                options={item.grades.map((g) => ({
+                  value: g.value,
+                  label: g.value,
+                  hint: g.label,
+                  tone: GRADE_TONES[g.value]
+                }))}
                 value={record.health[item.id] ?? ''}
-                onChange={(e) => setHealth(item.id, e.target.value)}
-              >
-                <option value="">未評価</option>
-                {HEALTH_GRADES.map((g) => (
-                  <option key={g.value} value={g.value}>
-                    {g.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+                onChange={(v) => setHealth(item.id, v)}
+              />
+            </div>
           ))}
         </div>
       </fieldset>

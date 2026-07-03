@@ -242,6 +242,146 @@ button:disabled {
   margin-left: 4px;
 }
 
+/* ---- ボタン選択（プルダウン置き換え） ---- */
+.btn-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+  gap: 6px;
+}
+
+.btn-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 4px;
+  min-height: 44px;
+  border: 1px solid #b0bec5;
+  border-radius: 10px;
+  background: #fff;
+  color: #37474f;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.btn-choice-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.btn-choice-hint {
+  font-size: 0.68rem;
+  color: #607d8b;
+}
+
+.btn-choice.selected {
+  border-color: #2e7d32;
+  background: #2e7d32;
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-choice.selected .btn-choice-hint {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 評点・グレードの色トーン（選択時のみ着色） */
+.btn-choice.selected.tone-g0 { background: #2e7d32; border-color: #2e7d32; }
+.btn-choice.selected.tone-g1 { background: #7cb342; border-color: #7cb342; }
+.btn-choice.selected.tone-g2 { background: #c0ca33; border-color: #c0ca33; color: #33370a; }
+.btn-choice.selected.tone-g3 { background: #ef6c00; border-color: #ef6c00; }
+.btn-choice.selected.tone-g4 { background: #c62828; border-color: #c62828; }
+.btn-choice.selected.tone-g2 .btn-choice-hint { color: rgba(0, 0, 0, 0.6); }
+
+/* ---- 案件バー ---- */
+.project-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #cfd8dc;
+  border-radius: 10px;
+}
+
+.project-bar-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #2e7d32;
+}
+
+.project-bar .btn-group {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.project-bar .btn-choice {
+  flex-direction: row;
+  min-height: 36px;
+  padding: 6px 12px;
+}
+
+/* ---- 活力度・健全度 項目リスト（ボタン式） ---- */
+.item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item-row-btn {
+  padding: 8px;
+  border: 1px solid #eceff1;
+  border-radius: 8px;
+  background: #fafcf9;
+}
+
+.item-head {
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+/* ---- 位置微修正マップ ---- */
+.picker-map {
+  height: 260px;
+  border-radius: 10px;
+  border: 1px solid #cfd8dc;
+  margin-top: 8px;
+}
+
+/* ---- 案件リスト（設定） ---- */
+.project-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.project-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.project-list li .btn-choice {
+  flex-direction: row;
+  min-height: 36px;
+}
+
+.project-list li .hint {
+  flex: 1;
+}
+
 .check-row {
   display: flex;
   flex-wrap: wrap;

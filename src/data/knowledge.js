@@ -97,7 +97,7 @@ export const FUNGUS_KNOWLEDGE = [
     verified: false
   },
   {
-    name: 'エブリコ・その他不明',
+    name: 'その他・不明',
     decayType: '—',
     decayPart: '—',
     riskNote: '同定できない子実体も腐朽進行の兆候として記録し、写真を残して専門家の同定につなげる。',

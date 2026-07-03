@@ -228,17 +228,22 @@ npm run dev
 
 ## 9. 実装メモ（v27 初期実装時の注意点）
 
-- **項目キーは v26.8 の実データ（backup_20260703.json）と照合済み。**
+- **項目キー・項目名・評点文言は v26.1shindan のソースと照合済み（全項目確定）。**
   v26 は英語名キー（`fungusBody`, `sprout` 等）を使っており、v27 も同じキーを
   正式IDとして採用した（`SCORE_KEY_MAP` / `HEALTH_KEY_MAP` は空でよい）。
-  - 健全度14項目: **全キー確認済み**（`src/data/healthItems.js`）。
-    日本語ラベルのみキー名からの推定なので v26 画面表記と要照合。
-  - 活力度: 実データに現れた **5キーのみ確認済み**（`bud` / `sprout` /
-    `autumnColor` / `barkTurnover` / `barkWound`）。残り12項目は
-    v26.1shindan のソースで確認するまで仮ID（`d01`〜`d12`, `confirmed: false`）。
-    確認後 `src/data/declineItems.js` を差し替えること。
+  - 活力度17項目（`src/data/declineItems.js`）: v26 の `declineItems` を
+    そのまま採用。各項目の `desc`（評点0〜4の説明文）はボタン入力のラベルに使う。
+  - 健全度14項目（`src/data/healthItems.js`）: v26 の `healthItems` を採用。
+    項目ごとに使わないグレード（v26 の `inactive`／「該当なし」）は除外し、
+    `grades` に「実際に選べるグレードと説明文」だけを持たせている。
   - 取り込み時の平均再計算は「record に実在する評点キー」で行うため、
-    マスタ未確認のキーが来ても平均値は v26 と一致する。
+    マスタ外のキーが来ても平均値は v26 と一致する。
+- **入力UIはプルダウンでなくボタン**（`ButtonGroup.jsx`）。天候・活力度・
+  健全度・案件選択をボタン化。現場でのタップ操作を優先。
+- **案件（プロジェクト）**は Dexie `projects` テーブルに保存。設定タブで登録し、
+  点検入力タブ上部のバーで選択、`record.projectId` に紐づく。
+- **位置の微修正**: GPS取得後、`LocationPicker.jsx` の地図でピンをドラッグ
+  またはタップして緯度経度を調整できる。
 - **knowledge.js のマスタは全件 `verified: false`（出典確認中）で登録済み。**
   公的資料の原典ページと照合してから `verified: true` に変更すること。
 - 判定テストは `npm test`（node --test）で実行できる。
