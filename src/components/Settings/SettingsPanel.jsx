@@ -134,7 +134,13 @@ export default function SettingsPanel() {
       </fieldset>
 
       <fieldset>
-        <legend>GAS同期（スプレッドシート）</legend>
+        <legend>クラウド共有（スプレッドシート＋Drive）</legend>
+        <p className="hint">
+          スプレッドシート（記録）と Drive（写真）を共有マスタとして使います。
+          URLを設定すると、アプリを開くたびに自動でクラウドから記録を取り込み、
+          記録一覧の「☁️ 共有」「⬇️ 読込」で案件ごとにやり取りできます。
+          GAS側の導入手順はリポジトリの <code>gas/Code.gs</code> 冒頭を参照してください。
+        </p>
         <label className="field">
           <span>GAS WebアプリURL</span>
           <input

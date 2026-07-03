@@ -17,7 +17,7 @@ const TABS = [
 const BACKUP_NUDGE_DAYS = 7;
 
 export default function App() {
-  const { load, loaded, records, settings } = useRecordStore();
+  const { load, loaded, records, settings, syncMessage } = useRecordStore();
   const [tab, setTab] = useState('inspect');
 
   useEffect(() => {
@@ -49,6 +49,8 @@ export default function App() {
           ))}
         </nav>
       </header>
+
+      {syncMessage && <div className="banner banner-sync">{syncMessage}</div>}
 
       {showBackupNudge && (
         <div className="banner banner-backup">

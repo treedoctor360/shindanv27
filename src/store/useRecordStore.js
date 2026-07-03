@@ -4,6 +4,7 @@
 
 import { create } from 'zustand';
 import { db, saveRecordWithPhotos, deleteRecordWithPhotos, getSetting, setSetting } from '../db/db.js';
+import { autoPull } from '../features/gas/gasSync.js';
 
 export const useRecordStore = create((set, get) => ({
   // ---- 状態 ----
@@ -12,13 +13,14 @@ export const useRecordStore = create((set, get) => ({
   activeProjectId: '',   // 現在選択中の案件ID（新規record に付与）
   loaded: false,         // Dexie からの初回読込が済んだか
   editingId: null,       // 編集中の record.id（null = 新規）
+  syncMessage: '',       // クラウド同期の状態表示（''なら非表示）
   settings: {
     gasUrl: '',          // GAS（Google Apps Script）同期先URL
     inspector: '',       // 既定の調査者名
     lastBackupAt: null   // 最終バックアップ（JSON書き出し or GAS同期）日時
   },
 
-  // ---- 初期化: Dexie から読み込む ----
+  // ---- 初期化: Dexie から読み込み、クラウドから自動取り込み ----
   load: async () => {
     const records = await db.records.toArray();
     const projects = await db.projects.toArray();
@@ -29,6 +31,24 @@ export const useRecordStore = create((set, get) => ({
     };
     const activeProjectId = await getSetting('activeProjectId', '');
     set({ records, projects, activeProjectId, settings, loaded: true });
+
+    // 起動時の自動取り込み（クラウドが共有マスタ）。
+    // 画面表示は止めない。オフラインや未設定なら黙って諦める。
+    if (settings.gasUrl && navigator.onLine) {
+      set({ syncMessage: '☁️ クラウドから取り込み中…' });
+      try {
+        const { applied, total } = await autoPull(settings.gasUrl);
+        await get().reload();
+        set({
+          syncMessage:
+            applied > 0 ? `☁️ クラウドから ${applied} 件を取り込みました` : `☁️ クラウドと同期済み（${total} 件）`
+        });
+      } catch {
+        set({ syncMessage: '⚠️ クラウド取り込みに失敗（オフライン?）。ローカルのデータで動作中' });
+      }
+      // 数秒後にメッセージを消す
+      setTimeout(() => set({ syncMessage: '' }), 6000);
+    }
   },
 
   // ---- 案件（プロジェクト） ----
@@ -56,7 +76,9 @@ export const useRecordStore = create((set, get) => ({
 
   // ---- record CRUD ----
   saveRecord: async (record, images) => {
-    await saveRecordWithPhotos(record, images);
+    // 更新日時は保存のたびに刻む（クラウド同期の競合解決に使う）
+    const toSave = { ...record, updatedAt: new Date().toISOString(), _sentToGAS: false };
+    await saveRecordWithPhotos(toSave, images);
     const records = await db.records.toArray();
     set({ records });
   },
