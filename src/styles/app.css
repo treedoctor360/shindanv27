@@ -553,6 +553,34 @@ td.empty {
   margin-right: 4px;
 }
 
+/* ---- 出力・エクスポート ---- */
+.export-panel .check-row button {
+  white-space: nowrap;
+}
+
+.gpx-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #cfd8dc;
+}
+
+.gpx-row button {
+  padding: 6px 12px;
+  font-size: 0.88rem;
+}
+
+.mail-panel {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #cfd8dc;
+  border-radius: 8px;
+  background: #f5f7f5;
+}
+
 /* ---- フッター ---- */
 .app-footer {
   margin-top: 32px;
@@ -561,4 +589,32 @@ td.empty {
   text-align: center;
   font-size: 0.78rem;
   color: #78909c;
+}
+
+/* ---- 印刷（記録一覧の表だけをきれいに出す） ---- */
+@media print {
+  .app-header,
+  .banner,
+  .project-bar,
+  .list-toolbar,
+  .export-panel,
+  .row-actions,
+  .app-footer,
+  .form-actions {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .table-wrap {
+    border: none;
+    overflow: visible;
+  }
+
+  th,
+  td {
+    border: 1px solid #999;
+  }
 }

@@ -13,6 +13,7 @@ import { HEALTH_ITEMS } from '../../data/healthItems.js';
 import { FUNGUS_OPTIONS, findSpeciesKnowledge, findFungusKnowledge } from '../../data/knowledge.js';
 import { evaluateRecord } from '../../logic/diagnosis.js';
 import { generateFindings, needsPrecisionDiagnosis } from '../../logic/findings.js';
+import { exportFormExcel } from '../../features/excel/exportFormExcel.js';
 import PhotoInput from './PhotoInput.jsx';
 import ButtonGroup from './ButtonGroup.jsx';
 import LocationPicker from './LocationPicker.jsx';
@@ -508,6 +509,23 @@ export default function InspectForm({ onSaved }) {
         <button type="button" className="primary" onClick={handleSave} disabled={saving}>
           {saving ? '保存中…' : editingId ? '💾 上書き保存' : '💾 保存'}
         </button>
+        {editingId && (
+          <button
+            type="button"
+            onClick={() => {
+              // 帳票は保存済みの判定値でなく、いま画面にある内容＋最新の判定で出す
+              const evaluated = evaluateRecord(record, DECLINE_ITEM_IDS);
+              exportFormExcel({
+                ...record,
+                avg: evaluated.avg,
+                worstHealth: evaluated.worst,
+                overall: evaluated.overall ? evaluated.overall.grade : null
+              });
+            }}
+          >
+            📊 帳票Excel
+          </button>
+        )}
         {editingId && (
           <button type="button" onClick={resetToNew}>
             新規入力に戻る

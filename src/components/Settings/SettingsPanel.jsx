@@ -4,7 +4,7 @@
 // - JSON取り込み: 追記マージ（id一致で更新・未知idは追加）／全上書き（確認あり）
 import { useRef, useState } from 'react';
 import { useRecordStore } from '../../store/useRecordStore.js';
-import { exportAll } from '../../db/db.js';
+import { db, exportAll } from '../../db/db.js';
 import { importBackup } from '../../features/import/importLegacy.js';
 
 export default function SettingsPanel() {
@@ -57,6 +57,32 @@ export default function SettingsPanel() {
     } finally {
       setBusy(false);
     }
+  };
+
+  // 無効記録の掃除: 樹木番号が無く評価も写真も無い「空の記録」を削除する
+  const handleRemoveInvalid = async () => {
+    const invalid = [];
+    for (const r of records) {
+      if (r.treeNo) continue;
+      const hasScores = Object.values(r.scores ?? {}).some((v) => v !== '' && v != null);
+      const hasHealth = Object.values(r.health ?? {}).some((v) => v);
+      const photoRow = await db.photos.get(r.id);
+      const hasPhotos = (photoRow?.images ?? []).length > 0;
+      if (!hasScores && !hasHealth && !hasPhotos) invalid.push(r);
+    }
+    if (invalid.length === 0) {
+      alert('無効な記録はありません');
+      return;
+    }
+    if (!window.confirm(`樹木番号も評価も写真も無い記録 ${invalid.length} 件を削除しますか？`)) return;
+    await db.transaction('rw', db.records, db.photos, async () => {
+      for (const r of invalid) {
+        await db.records.delete(r.id);
+        await db.photos.delete(r.id);
+      }
+    });
+    await reload();
+    alert(`${invalid.length} 件を削除しました`);
   };
 
   // JSON取り込み（v26書き出し / v27バックアップ両対応）
@@ -202,6 +228,14 @@ export default function SettingsPanel() {
           現行版（v26.x）で「JSON書き出し」したファイルをそのまま取り込めます。
           写真は自動的に写真テーブルへ分離され、判定値は取り込み時に再計算されます。
         </p>
+      </fieldset>
+
+      <fieldset>
+        <legend>メンテナンス</legend>
+        <button type="button" className="danger" onClick={handleRemoveInvalid} disabled={busy}>
+          🧹 無効記録を削除
+        </button>
+        <p className="hint">樹木番号・評価・写真がすべて空の記録を削除します（確認あり）。</p>
       </fieldset>
     </div>
   );
