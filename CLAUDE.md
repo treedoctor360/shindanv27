@@ -85,6 +85,7 @@ db.version(1).stores({
   id, projectId, treeNo, surveyDate, weather, inspector,
   species, family, scientificName, nickname, location,
   treeHeight, trunkGirth, latitude, longitude,
+  geoSource,           // 座標の入力経路（gps / manual / paste / map。表示用のみ）
   scores: {},          // 活力度 17項目（0〜4）
   health: {},          // 健全度 14項目（A〜D）
   fungus: [], fungusOther,
@@ -270,6 +271,11 @@ npm run dev
   点検入力タブ上部のバーで選択、`record.projectId` に紐づく。
 - **位置の微修正**: GPS取得後、`LocationPicker.jsx` の地図でピンをドラッグ
   またはタップして緯度経度を調整できる。
+- **座標の登録経路は4つ**（`GeoField.jsx` + `src/logic/geo.js`）。現地では「📍 現在地を入れる」
+  （GPS）、後日デスクで登録する時は緯度経度の手入力、または **Googleマップのリンク／緯度経度ペア
+  ／度分秒の貼り付け → 「読み取り」**、加えて地図のピン操作。座標が入っていれば「地図で確認」で
+  Googleマップを別タブで開ける。パース処理は `parseLatLng()` に閉じており `npm test` で検証する。
+  短縮リンク（maps.app.goo.gl）はブラウザから展開できない（CORS）ため、その旨を案内する。
 - **knowledge.js のマスタは全件 `verified: false`（出典確認中）で登録済み。**
   公的資料の原典ページと照合してから `verified: true` に変更すること。
 - 判定テストは `npm test`（node --test）で実行できる。

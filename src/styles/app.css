@@ -218,6 +218,50 @@ button:disabled {
   white-space: nowrap;
 }
 
+/* ---- 座標入力（GPS・手入力・Googleマップのリンク貼り付け） ---- */
+.geo-field .gps-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.geo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.geo-row button {
+  white-space: nowrap;
+}
+
+.geo-row a {
+  color: #2e7d32;
+  font-size: 0.85rem;
+}
+
+.geo-status {
+  font-size: 0.85rem;
+  color: #607d8b;
+}
+
+.geo-paste {
+  flex: 1;
+  min-width: 160px;
+}
+
+.geo-field input[aria-invalid='true'] {
+  border-color: #c62828;
+  background: #fff5f5;
+}
+
+.geo-err {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: #c62828;
+}
+
 .item-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

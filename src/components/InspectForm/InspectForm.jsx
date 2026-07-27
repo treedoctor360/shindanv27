@@ -17,6 +17,7 @@ import { exportFormExcel } from '../../features/excel/exportFormExcel.js';
 import PhotoInput from './PhotoInput.jsx';
 import ButtonGroup from './ButtonGroup.jsx';
 import LocationPicker from './LocationPicker.jsx';
+import GeoField from './GeoField.jsx';
 import InferencePanel from '../InferencePanel/InferencePanel.jsx';
 
 // v26 実データの表記（「晴れ」）に合わせる
@@ -52,6 +53,7 @@ function emptyRecord(defaults = {}, projectId = '') {
     trunkGirth: '',
     latitude: '',
     longitude: '',
+    geoSource: '', // 座標の入力経路（gps / manual / paste / map）
     scores: {},
     health: {},
     fungus: [],
@@ -137,28 +139,14 @@ export default function InspectForm({ onSaved }) {
       };
     });
 
-  // 地図のピン操作から緯度経度を更新
+  // 地図のピン操作から緯度経度を更新（GPS取得・貼り付けは GeoField 側で行う）
   const setLatLng = (lat, lng) =>
-    setRecord((prev) => ({ ...prev, latitude: lat.toFixed(6), longitude: lng.toFixed(6) }));
-
-  // GPS取得（現在地を緯度経度欄へ）
-  const takeGPS = () => {
-    if (!navigator.geolocation) {
-      alert('この端末では位置情報を取得できません');
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setRecord((prev) => ({
-          ...prev,
-          latitude: pos.coords.latitude.toFixed(6),
-          longitude: pos.coords.longitude.toFixed(6)
-        }));
-      },
-      (err) => alert(`位置情報の取得に失敗しました: ${err.message}`),
-      { enableHighAccuracy: true, timeout: 15000 }
-    );
-  };
+    setRecord((prev) => ({
+      ...prev,
+      latitude: lat.toFixed(6),
+      longitude: lng.toFixed(6),
+      geoSource: 'map'
+    }));
 
   // 機能①: 所見ドラフト挿入
   const insertFindingsDraft = () => {
@@ -310,21 +298,12 @@ export default function InspectForm({ onSaved }) {
           </label>
           <div className="field field-wide">
             <span>位置（緯度・経度）</span>
-            <div className="gps-row">
-              <input
-                placeholder="緯度"
-                value={record.latitude}
-                onChange={(e) => set('latitude', e.target.value)}
-              />
-              <input
-                placeholder="経度"
-                value={record.longitude}
-                onChange={(e) => set('longitude', e.target.value)}
-              />
-              <button type="button" onClick={takeGPS}>
-                📍 GPS
-              </button>
-            </div>
+            <GeoField
+              latitude={record.latitude}
+              longitude={record.longitude}
+              geoSource={record.geoSource}
+              onChange={(patch) => setRecord((prev) => ({ ...prev, ...patch }))}
+            />
             <LocationPicker
               lat={Number(record.latitude)}
               lng={Number(record.longitude)}
