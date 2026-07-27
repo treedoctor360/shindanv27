@@ -38,6 +38,57 @@ test('parseLatLng: 度分秒（半球記号あり・順序が逆でも緯経を�
   assert.ok(s.ok && near(s.lat, -35.0116) && near(s.lng, -135.768111));
 });
 
+test('parseLatLng: 度のみ（日本語の方角）', () => {
+  for (const s of [
+    '北35.01394°, 東135.85369°',
+    '北緯35.01394度 東経135.85369度',
+    '北緯 35.01394度、東経 135.85369度'
+  ]) {
+    const r = parseLatLng(s);
+    assert.equal(r.ok, true, s);
+    assert.ok(near(r.lat, 35.01394) && near(r.lng, 135.85369), s);
+  }
+});
+
+test('parseLatLng: 度のみ（英字・度記号のみ）', () => {
+  for (const s of ['35.01394°N, 135.85369°E', 'N35.01394 E135.85369', '35.01394°, 135.85369°']) {
+    const r = parseLatLng(s);
+    assert.equal(r.ok, true, s);
+    assert.ok(near(r.lat, 35.01394) && near(r.lng, 135.85369), s);
+  }
+});
+
+test('parseLatLng: 度のみ（南緯・西経は負値）', () => {
+  const r = parseLatLng('南35.01394°, 西135.85369°');
+  assert.ok(r.ok && near(r.lat, -35.01394) && near(r.lng, -135.85369));
+});
+
+test('parseLatLng: 度のみ でも桁を丸めない', () => {
+  const r = parseLatLng('北35.01776443639602°, 東135.85462927807734°');
+  assert.equal(r.ok, true);
+  assert.equal(r.lat, 35.01776443639602);
+  assert.equal(r.lng, 135.85462927807734);
+});
+
+test('parseLatLng: 度のみ の追加で度分秒・URLが壊れていない', () => {
+  // 度分秒（分秒を含むものは parseDms が処理する）
+  const dms = parseLatLng('35°00\'41.8"N 135°46\'05.2"E');
+  assert.ok(dms.ok && near(dms.lat, 35.0116) && near(dms.lng, 135.768111));
+
+  // 小文字を拾わないこと（URL中の google の e などを半球記号と誤認しない）
+  const url = parseLatLng('https://www.google.com/maps?q=35.011600,135.768100');
+  assert.ok(url.ok && near(url.lat, 35.0116) && near(url.lng, 135.7681));
+
+  const pin = parseLatLng(
+    'https://www.google.com/maps/place/X/@35.0000,135.0000,17z/data=!3m1!4b1!4m5!3d35.0116!4d135.7681'
+  );
+  assert.ok(pin.ok && near(pin.lat, 35.0116) && near(pin.lng, 135.7681));
+
+  // 記号なしの数値ペアは従来どおり parseDecimalPair が処理する
+  const plain = parseLatLng('35.0116, 135.7681');
+  assert.ok(plain.ok && near(plain.lat, 35.0116) && near(plain.lng, 135.7681));
+});
+
 test('parseLatLng: 短縮リンクは読めない旨を返す', () => {
   const r = parseLatLng('https://maps.app.goo.gl/abcdefg');
   assert.equal(r.ok, false);

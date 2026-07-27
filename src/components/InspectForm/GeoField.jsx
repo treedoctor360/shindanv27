@@ -159,7 +159,7 @@ export default function GeoField({ latitude, longitude, geoSource, onChange }) {
           type="text"
           className="geo-paste"
           value={pasteText}
-          placeholder={'Googleマップのリンク / 35.0116, 135.7681 / 35°00\'41.8"N 135°46\'05.2"E'}
+          placeholder={'Googleマップのリンク / 35.0116, 135.7681 / 北35.01394°, 東135.85369°'}
           onChange={(e) => {
             setPasteText(e.target.value);
             setErr('');

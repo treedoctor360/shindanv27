@@ -57,6 +57,53 @@ function parseDms(text) {
   return { lat: lat.deg, lng: lng.deg };
 }
 
+// 日本語の方角と N/S/E/W の対応表。「北緯」「東経」は先に「緯」「経」を落として
+// 「北」「東」に正規化してからこの表を引く。
+const HEMI = {
+   北: 'N', 南: 'S', 東: 'E', 西: 'W',
+  N: 'N', S: 'S', E: 'E', W: 'W'
+};
+
+// 度のみ（分秒なし）の1トークン。「北35.01394°」「35.01394°N」「N35.01394」等。
+// 大文字の N/S/E/W だけを見る（小文字も拾うと URL 中の google の e などを誤認する）。
+// 末尾側の半球記号グループ（グループ3）の前に \s* を置かないこと。置くと
+// 「35.01394度 東135.85369度」の「東」を1つ目の数値の記号として食ってしまい、
+// 緯度に135が入って「範囲外」になる（DMS_RE と同じ落とし穴）。
+const DEG_TOKEN = /([NSEW北南東西])?\s*(-?\d{1,3}(?:\.\d+)?)[°度]?([NSEW北南東西])?/g;
+
+/**
+ * 度のみの表記を解釈する。分秒を含むものは parseDms に、
+ * 半球記号も度記号も無いただの数値ペアは parseDecimalPair に任せる。
+ * 対応例:
+ *   北35.01394°, 東135.85369°   北緯35.01394度 東経135.85369度
+ *   35.01394°N, 135.85369°E     N35.01394 E135.85369
+ *   南35.01394°, 西135.85369°   35.01394°, 135.85369°
+ */
+function parseDecimalDegrees(text) {
+  // 「北緯」→「北」、「東経」→「東」に正規化する
+  const s = String(text).replace(/([北南東西])\s*[緯経]/g, '$1');
+  if (/[′'’分″"”秒]/.test(s)) return null; // 分秒があれば度分秒として扱う
+  if (!/[°度]/.test(s) && !/[NSEW北南東西]/.test(s)) return null; // 目印が無ければ数値ペア扱い
+
+  const hits = [...s.matchAll(DEG_TOKEN)];
+  if (hits.length < 2) return null;
+  const vals = hits.slice(0, 2).map((h) => {
+    const hemi = HEMI[h[1]] || HEMI[h[3]] || '';
+    const n = num(h[2]);
+    // 半球記号があれば符号はそれで決める。無ければ数値自身の符号を活かす。
+    const deg = hemi === 'S' || hemi === 'W' ? -Math.abs(n) : hemi ? Math.abs(n) : n;
+    return { deg, hemi };
+  });
+  if (vals.some((v) => !Number.isFinite(v.deg))) return null;
+
+  // 半球記号があればそれで緯度・経度を決める。無ければ「緯度→経度」の順とみなす。
+  const lat = vals.find((v) => v.hemi === 'N' || v.hemi === 'S') || vals[0];
+  let lng = vals.find((v) => v.hemi === 'E' || v.hemi === 'W');
+  if (!lng || lng === lat) lng = vals.find((v) => v !== lat);
+  if (!lat || !lng) return null;
+  return { lat: lat.deg, lng: lng.deg };
+}
+
 // URLから座標を拾う。優先度: 明示クエリ(q/ll等) > ピン位置(!3d!4d) > 表示中心(@)
 // 表示中心(@)は「地図の中心」であってピンとは限らないため最後に見る。
 function parseUrl(text) {
@@ -80,7 +127,8 @@ function parseDecimalPair(text) {
 }
 
 /**
- * 座標らしき文字列を解釈する。Googleマップのリンク／緯度経度ペア／度分秒に対応。
+ * 座標らしき文字列を解釈する。
+ * Googleマップのリンク／緯度経度ペア／度分秒／度のみ（北35.01394°等）に対応。
  * @param {string} text
  * @returns {{ok:true, lat:number, lng:number} | {ok:false, reason:string}}
  */
@@ -96,11 +144,16 @@ export function parseLatLng(text) {
     };
   }
   const hit =
-    (/https?:\/\//i.test(s) ? parseUrl(s) : null) || parseDms(s) || parseUrl(s) || parseDecimalPair(s);
+    (/https?:\/\//i.test(s) ? parseUrl(s) : null) ||
+    parseDms(s) ||
+    parseDecimalDegrees(s) ||
+    parseUrl(s) ||
+    parseDecimalPair(s);
   if (!hit) {
     return {
       ok: false,
-      reason: '座標を読み取れませんでした（例: 35.011600, 135.768100 / Googleマップのリンク）。'
+      reason:
+        '座標を読み取れませんでした（例: 35.011600, 135.768100 / 北35.01394°, 東135.85369° / Googleマップのリンク）。'
     };
   }
   if (!isValidLat(hit.lat) || !isValidLng(hit.lng)) {
